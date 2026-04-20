@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blair Admin | Optimizar Fotos</title>
+    <title>Blair Admin | Laboratorio</title>
     
     <link rel="manifest" href="manifest.json">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
@@ -60,14 +60,6 @@
 
         .btn:hover { background-color: var(--blair-btn-hover); }
         
-        .btn-outline {
-            background-color: transparent;
-            color: var(--blair-accent);
-            border: 2px solid var(--blair-accent);
-        }
-
-        .btn-outline:hover { background-color: var(--blair-pink); }
-
         input[type="file"] { display: none; }
 
         #preview {
@@ -79,7 +71,6 @@
 
         #downloadBtn { display: none; margin-top: 20px; }
 
-        /* Estilos para el nuevo mensaje de estadísticas */
         #stats {
             display: none;
             background-color: #f8f9fa;
@@ -96,33 +87,28 @@
 <body>
 
     <h1>BLAIR</h1>
-    <p>Admin Workspace</p>
+    <p>Laboratorio de Optimización</p>
 
     <div class="card">
-        <a href="index.html" class="btn btn-outline">Ir a la Tienda</a>
-
-        <label for="imageInput" class="btn">Optimizar Foto Nueva</label>
+        <label for="imageInput" class="btn">Subir Foto de Prueba</label>
         <input type="file" id="imageInput" accept="image/*">
         
-        <p id="statusText" style="display:none; color: var(--blair-accent); font-weight: bold;">Procesando imagen...</p>
+        <p id="statusText" style="display:none; color: var(--blair-accent); font-weight: bold;">Procesando...</p>
 
         <div id="stats"></div>
 
         <img id="preview" alt="Vista previa">
-        <a id="downloadBtn" class="btn">Descargar .WebP</a>
+        <a id="downloadBtn" class="btn">Descargar .WebP Optimizado</a>
     </div>
 
     <script>
-        // Registrar el Service Worker para que sea una App (PWA)
+        // Registrar Service Worker apuntando al nuevo nombre
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js').catch(err => {
-                    console.log('Error al registrar Service Worker:', err);
-                });
+                navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
             });
         }
 
-        // Función matemática para convertir Bytes a KB o MB legibles
         function formatBytes(bytes) {
             if (bytes === 0) return '0 Bytes';
             const k = 1024;
@@ -135,27 +121,21 @@
             const file = event.target.files[0];
             if (!file) return;
 
-            const originalSize = file.size; // Guardamos el peso original
-
+            const originalSize = file.size;
             const statusText = document.getElementById('statusText');
             const statsBox = document.getElementById('stats');
             const preview = document.getElementById('preview');
             const downloadBtn = document.getElementById('downloadBtn');
 
-            // Ocultamos elementos anteriores si suben una segunda foto
             statsBox.style.display = 'none';
             preview.style.display = 'none';
             downloadBtn.style.display = 'none';
-            
             statusText.style.display = 'block';
-            statusText.innerText = "Comprimiendo imagen...";
 
             const options = { maxSizeMB: 1, maxWidthOrHeight: 1200, useWebWorker: true };
 
             try {
                 const compressedFile = await imageCompression(file, options);
-                statusText.innerText = "Aplicando sello y formato WebP...";
-
                 const img = new Image();
                 img.src = URL.createObjectURL(compressedFile);
                 
@@ -164,46 +144,36 @@
                     canvas.width = img.width;
                     canvas.height = img.height;
                     const ctx = canvas.getContext('2d');
-                    
                     ctx.drawImage(img, 0, 0);
                     
                     const fontSize = Math.floor(canvas.width * 0.05);
                     ctx.font = `bold ${fontSize}px sans-serif`;
-                    ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
+                    ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
                     ctx.textAlign = "right";
                     ctx.fillText("Blair", canvas.width - 20, canvas.height - 30);
                     
-                    // Usamos toBlob en lugar de toDataURL para poder pesar el archivo final exacto
                     canvas.toBlob((blob) => {
-                        const finalSize = blob.size; // Guardamos el peso final
-
-                        // Mostrar el Antes y Después
+                        const finalSize = blob.size;
                         statsBox.innerHTML = `
-                            <strong>¡Foto lista! 🎉</strong><br><br>
-                            Peso original: <b>${formatBytes(originalSize)}</b><br>
-                            Nuevo peso: <b style="color: #2e7d32;">${formatBytes(finalSize)}</b>
+                            <strong>¡Optimización Exitosa!</strong><br>
+                            Original: ${formatBytes(originalSize)}<br>
+                            Nuevo: <b>${formatBytes(finalSize)}</b>
                         `;
                         statsBox.style.display = 'block';
 
-                        // Mostrar previa y descarga
                         const finalUrl = URL.createObjectURL(blob);
                         preview.src = finalUrl;
                         preview.style.display = 'block';
-
                         downloadBtn.href = finalUrl;
-                        downloadBtn.download = `blair_stock_${Date.now()}.webp`;
+                        downloadBtn.download = `foto_optimizada.webp`;
                         downloadBtn.style.display = 'block';
-
                         statusText.style.display = 'none';
                     }, 'image/webp', 0.8);
                 };
-
             } catch (error) {
-                console.error('Error:', error);
-                statusText.innerText = "Ocurrió un error.";
+                statusText.innerText = "Error al procesar.";
             }
         });
     </script>
 </body>
 </html>
-
